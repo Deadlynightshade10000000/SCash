@@ -3,12 +3,11 @@
 # Distributed under the MIT software license, see the accompanying 
 # file COPYING or https://www.opensource.org/licenses/mit-license.php .
 
-import hashlib
 import sys
 import os
 from random import SystemRandom
 import base64
-import hmac
+import argon2
 
 if len(sys.argv) < 2:
     sys.stderr.write('Please include username as an argument.\n')
@@ -27,14 +26,12 @@ salt = "".join([x[2:] for x in hexseq])
 #Create 32 byte b64 password
 password = base64.urlsafe_b64encode(os.urandom(32))
 
-digestmod = hashlib.sha256
-
 if sys.version_info.major >= 3:
     password = password.decode('utf-8')
-    digestmod = 'SHA256'
- 
-m = hmac.new(bytearray(salt, 'utf-8'), bytearray(password, 'utf-8'), digestmod)
-result = m.hexdigest()
+
+# Use Argon2 for password hashing
+hasher = argon2.PasswordHasher()
+result = hasher.hash(password)
 
 print("String to be appended to zcash.conf:")
 print("rpcauth="+username+":"+salt+"$"+result)
